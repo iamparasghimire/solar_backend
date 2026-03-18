@@ -1,9 +1,11 @@
 #!/bin/sh
 set -e
 
-echo "==> Waiting for database..."
-# Simple wait loop — postgres may not be immediately ready
-until python -c "
+mkdir -p /app/staticfiles /app/media "$(dirname "${SQLITE_PATH:-/app/db.sqlite3}")"
+
+if [ -n "${DB_HOST:-}" ]; then
+    echo "==> Waiting for PostgreSQL..."
+    until python -c "
 import os, sys
 if os.environ.get('DB_HOST'):
     import psycopg2
@@ -18,9 +20,12 @@ if os.environ.get('DB_HOST'):
     except psycopg2.OperationalError:
         sys.exit(1)
 " 2>/dev/null; do
-  echo "   Database not ready — retrying in 2s..."
-  sleep 2
-done
+        echo "   Database not ready, retrying in 2s..."
+        sleep 2
+    done
+else
+    echo "==> Using SQLite at ${SQLITE_PATH:-/app/db.sqlite3}"
+fi
 
 echo "==> Running migrations..."
 python manage.py migrate --noinput
