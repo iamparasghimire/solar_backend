@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from rest_framework.permissions import IsAdminUser, AllowAny
@@ -8,7 +9,19 @@ from rest_framework.permissions import IsAdminUser, AllowAny
 # In production, restrict API docs to admins only
 _docs_permission = AllowAny if settings.DEBUG else IsAdminUser
 
+
+def root_status(_request):
+    return JsonResponse(
+        {
+            'status': 'ok',
+            'service': 'solar-backend',
+            'admin': '/admin/',
+            'schema': '/api/schema/',
+        }
+    )
+
 urlpatterns = [
+    path('', root_status),
     path('admin/', admin.site.urls),
 
     # ── API v1 ────────────────────────────
